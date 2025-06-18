@@ -2,6 +2,9 @@ import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+
+const GEOCODING_API_KEY='6853131e7b322895112880lxn58fb23';
+
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
 	server = new McpServer({
@@ -51,7 +54,10 @@ export class MyMCP extends McpAgent {
 			"get_crimes_for_specific_date_and_police_force_id",
 			{ date: z.string(), force_id: z.string() },
 			async ({ date, force_id }) => {
-				const crimes = await fetch(`https://data.police.uk/api/crimes-no-location?category=all-crime&date=${date}&force=${force_id}`)
+
+				const url = `https://data.police.uk/api/crimes-no-location?category=all-crime&date=${date}&force=${force_id}`
+				console.log(url)
+				const crimes = await fetch(url)
 				const crimesJson = await crimes.json()
 
 				return {
@@ -66,35 +72,43 @@ export class MyMCP extends McpAgent {
 		)
 
 
-		// // Turn address into longitude and latitude
-		// this.server.tool(
-		// 	"address_to_lat_and_lon",
-		// 	{ address: z.string() },
-		// 	async ({ address }) => {
-		// 		const latitude = 51.500370;
-		// 		const longitude = -0.126862;
-		// 		return {
-		// 			content: [{ type: "text", text: `The latitude for ${address} is ${latitude} and the longitude is ${longitude}` }],
-		// 		};
-		// 	}
-		// )
+		// Turn address into longitude and latitude
+		this.server.tool(
+			"address_to_lat_and_lon",
+			{ address: z.string() },
+			async ({ address }) => {
+				const encodedAddress = encodeURIComponent(address);
+				const url = `https://geocode.maps.co/search?q=${encodedAddress}&api_key=${GEOCODING_API_KEY}`
+				const response = await fetch(url)
+				const data = await response.json() as Array<any>
+				const latitude = data[0].lat
+				const longitude = data[0].lon
+				const display_name = data[0].display_name
+				return {
+					content: [{ type: "text", text: `The latitude for ${address} is ${latitude} and the longitude is ${longitude}. The display name is ${display_name}` }],
+				};
+			}
+		)
 
 
-		// // Get crime at specific latitude and longitude
-		// this.server.tool(
-		// 	"get_crime_at_lat_and_lon",
-		// 	{ latitude: z.number(), longitude: z.number() },
-		// 	async ({ latitude, longitude }) => {
-		// 		return {
-		// 			content: [
-		// 				{
-		// 					type: "text",
-		// 					text: `The crime committed at ${latitude} and ${longitude} is theft`
-		// 				}
-		// 			]
-		// 		};
-		// 	}
-		// )
+		// Get crime at specific latitude and longitude
+		this.server.tool(
+			"get_crime_at_lat_and_lon",
+			{ latitude: z.number(), longitude: z.number(), date: z.string() },
+			async ({ latitude, longitude, date }) => {
+				const url = `https://data.police.uk/api/crimes-at-location?date=${date}&lat=${latitude}&lng=${longitude}`
+				const response = await fetch(url)
+				const data = await response.json()
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Here is a JSON object of all crimes committed at ${latitude} and ${longitude} on ${date}: ${JSON.stringify(data)}`
+						}
+					]
+				};
+			}
+		)
 	}
 }
 
