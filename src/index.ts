@@ -30,13 +30,28 @@ export class MyMCP extends McpAgent {
 			}
 		)
 
+		// Convert date to correct format
+		this.server.tool(
+			"convert_date_to_correct_format",
+			{ date: z.string() },
+			async ({ date }) => {
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Ensure that the date is in the format YYYY-MM`
+						}
+					]
+				};
+			}
+		)
+
 		// Get crimes for a specific date
 		this.server.tool(
-			"get_crimes_for_specific_date_and_police_force",
-			{ date: z.date(), force_id: z.string() },
+			"get_crimes_for_specific_date_and_police_force_id",
+			{ date: z.string(), force_id: z.string() },
 			async ({ date, force_id }) => {
-				const formattedDate = date.toISOString().slice(0, 7);
-				const crimes = await fetch(`https://data.police.uk/api/crimes-no-location?category=all-crime&date=${formattedDate}&force=${force_id}`)
+				const crimes = await fetch(`https://data.police.uk/api/crimes-no-location?category=all-crime&date=${date}&force=${force_id}`)
 				const crimesJson = await crimes.json()
 
 				return {
@@ -51,35 +66,35 @@ export class MyMCP extends McpAgent {
 		)
 
 
-		// Turn address into longitude and latitude
-		this.server.tool(
-			"address_to_lat_and_lon",
-			{ address: z.string() },
-			async ({ address }) => {
-				const latitude = 51.500370;
-				const longitude = -0.126862;
-				return {
-					content: [{ type: "text", text: `The latitude for ${address} is ${latitude} and the longitude is ${longitude}` }],
-				};
-			}
-		)
+		// // Turn address into longitude and latitude
+		// this.server.tool(
+		// 	"address_to_lat_and_lon",
+		// 	{ address: z.string() },
+		// 	async ({ address }) => {
+		// 		const latitude = 51.500370;
+		// 		const longitude = -0.126862;
+		// 		return {
+		// 			content: [{ type: "text", text: `The latitude for ${address} is ${latitude} and the longitude is ${longitude}` }],
+		// 		};
+		// 	}
+		// )
 
 
-		// Get crime at specific latitude and longitude
-		this.server.tool(
-			"get_crime_at_lat_and_lon",
-			{ latitude: z.number(), longitude: z.number() },
-			async ({ latitude, longitude }) => {
-				return {
-					content: [
-						{
-							type: "text",
-							text: `The crime committed at ${latitude} and ${longitude} is theft`
-						}
-					]
-				};
-			}
-		)
+		// // Get crime at specific latitude and longitude
+		// this.server.tool(
+		// 	"get_crime_at_lat_and_lon",
+		// 	{ latitude: z.number(), longitude: z.number() },
+		// 	async ({ latitude, longitude }) => {
+		// 		return {
+		// 			content: [
+		// 				{
+		// 					type: "text",
+		// 					text: `The crime committed at ${latitude} and ${longitude} is theft`
+		// 				}
+		// 			]
+		// 		};
+		// 	}
+		// )
 	}
 }
 
