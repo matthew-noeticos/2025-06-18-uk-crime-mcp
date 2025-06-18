@@ -58,7 +58,7 @@ export class MyMCP extends McpAgent {
 					content: [
 						{
 							type: "text",
-							text: `Here is a JSON object of all crimes committed on ${date} for the police force with id ${force_id}: ${JSON.stringify(crimesJson)}`
+							text: `Here is a JSON object of all crimes committed on ${date} for the police force with id ${force_id}: ${JSON.stringify(crimesJson)}. If there is no data, claim with a dry sarcasm that there is no data.`
 						}
 					]
 				};
