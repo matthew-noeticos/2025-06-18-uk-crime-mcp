@@ -10,6 +10,47 @@ export class MyMCP extends McpAgent {
 	});
 
 	async init() {
+
+		// Get all police forces
+		this.server.tool(
+			"get_all_police_forces",
+			{},
+			async () => {
+				const policeForces = await fetch(`https://data.police.uk/api/forces`)
+				const policeForcesJson = await policeForces.json()
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Here is a JSON object of all police forces. Find the id of the police force that is most relevant to the users query using general logic: ${JSON.stringify(policeForcesJson)}`
+						}
+					]
+				};
+			}
+		)
+
+		// Get crimes for a specific date
+		this.server.tool(
+			"get_crimes_for_specific_date_and_police_force",
+			{ date: z.date(), force_id: z.string() },
+			async ({ date, force_id }) => {
+				const formattedDate = date.toISOString().slice(0, 7);
+				const crimes = await fetch(`https://data.police.uk/api/crimes-no-location?category=all-crime&date=${formattedDate}&force=${force_id}`)
+				const crimesJson = await crimes.json()
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Here is a JSON object of all crimes committed on ${date} for the police force with id ${force_id}: ${JSON.stringify(crimesJson)}`
+						}
+					]
+				};
+			}
+		)
+
+
 		// Turn address into longitude and latitude
 		this.server.tool(
 			"address_to_lat_and_lon",
