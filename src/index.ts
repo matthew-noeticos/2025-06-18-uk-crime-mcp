@@ -5,56 +5,40 @@ import { z } from "zod";
 // Define our MCP agent with tools
 export class MyMCP extends McpAgent {
 	server = new McpServer({
-		name: "Authless Calculator",
-		version: "1.0.0",
+		name: "UK Crime MCP",
+		version: "0.0.1",
 	});
 
 	async init() {
-		// Simple addition tool
+		// Turn address into longitude and latitude
 		this.server.tool(
-			"add",
-			{ a: z.number(), b: z.number() },
-			async ({ a, b }) => ({
-				content: [{ type: "text", text: String(a + b) }],
-			})
-		);
-
-		// Calculator tool with multiple operations
-		this.server.tool(
-			"calculate",
-			{
-				operation: z.enum(["add", "subtract", "multiply", "divide"]),
-				a: z.number(),
-				b: z.number(),
-			},
-			async ({ operation, a, b }) => {
-				let result: number;
-				switch (operation) {
-					case "add":
-						result = a + b;
-						break;
-					case "subtract":
-						result = a - b;
-						break;
-					case "multiply":
-						result = a * b;
-						break;
-					case "divide":
-						if (b === 0)
-							return {
-								content: [
-									{
-										type: "text",
-										text: "Error: Cannot divide by zero",
-									},
-								],
-							};
-						result = a / b;
-						break;
-				}
-				return { content: [{ type: "text", text: String(result) }] };
+			"address_to_lat_and_lon",
+			{ address: z.string() },
+			async ({ address }) => {
+				const latitude = 51.500370;
+				const longitude = -0.126862;
+				return {
+					content: [{ type: "text", text: `The latitude for ${address} is ${latitude} and the longitude is ${longitude}` }],
+				};
 			}
-		);
+		)
+
+
+		// Get crime at specific latitude and longitude
+		this.server.tool(
+			"get_crime_at_lat_and_lon",
+			{ latitude: z.number(), longitude: z.number() },
+			async ({ latitude, longitude }) => {
+				return {
+					content: [
+						{
+							type: "text",
+							text: `The crime committed at ${latitude} and ${longitude} is theft`
+						}
+					]
+				};
+			}
+		)
 	}
 }
 
